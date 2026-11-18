@@ -40,5 +40,60 @@ from ..model_cache import get_preds  # noqa: F401
 
 
 def run(ds, cfg, preds=None):
-    # TODO
-    raise NotImplementedError("check second_opinion chưa làm")
+    if preds is None:
+        preds = get_preds(ds, cfg, "checker")
+    settings = cfg["second_opinion"]
+    issues = []
+    for path in ds.image_files():
+        stem = path.stem
+        rows = ds.read_label_lines(stem)
+        if stem not in preds or rows is None:
+            continue
+        size = ds.image_size(stem)
+        if size is None:
+            continue
+        labels = []
+        for number, text in rows:
+            try:
+                box = parse_yolo_line(text)
+            except (ValueError, OverflowError):
+                continue
+            if 0 <= box[0] < len(ds.classes):
+                labels.append((number, box))
+
+        def warn(code, message, line=None, **extra):
+            issues.append(Issue("second_opinion", WARN, code, stem,
+                                message, line, extra))
+
+        predictions = preds[stem]
+        for cls, conf, cx, cy, w, h in predictions:
+            if conf < settings["conf"] or w * size[0] * h * size[1] < settings["min_area_px"]:
+                continue
+            box = (cx, cy, w, h)
+            candidates = [(label[0], iou_xywh(box, label[1:]))
+                          for _, label in labels]
+            candidates = [(c, iou) for c, iou in candidates
+                          if iou >= settings["iou_missing"]]
+            if not candidates:
+                warn("POSSIBLE_MISSING", "model thấy vật chưa có nhãn", conf=conf)
+                continue
+            same = [iou for c, iou in candidates if c == cls]
+            if same:
+                best = max(same)
+                if best < settings["iou_loose"]:
+                    warn("POSSIBLE_LOOSE_BOX", "box cùng lớp nhưng khớp kém",
+                         conf=conf, iou=best)
+            else:
+                best = max(iou for _, iou in candidates)
+                if best >= settings["iou_match"]:
+                    warn("POSSIBLE_WRONG_CLASS", "model và nhãn khác lớp",
+                         conf=conf, iou=best)
+
+        # Nhánh FALSE_POS dùng fp_conf riêng và KHÔNG lọc diện tích.
+        support = [p for p in predictions if p[1] >= settings["fp_conf"]]
+        for number, label in labels:
+            best = max((iou_xywh(label[1:], p[2:]) for p in support), default=0.0)
+            if best < settings["iou_missing"]:
+                warn("POSSIBLE_FALSE_POS", "box nhãn không được model hỗ trợ",
+                     line=number, iou=best)
+    return issues
