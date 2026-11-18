@@ -72,6 +72,6 @@ Giả thuyết: (1) raw có 4 ảnh trùng test, có thể ảnh hưởng điể
 
 Giữ **Hold**. Release cần 0 ERROR và tối đa 20/205 ảnh cảnh báo chưa duyệt; không đổi ngân sách/trọng số/ngưỡng gate để ép đạt.
 
-- Prompt chính (trích yêu cầu thực tế): “Bạn hãy hướng dẫn tôi làm thật chi tiết từ bước 2. Viết lần lượt 4 module.” AI đối chiếu docstring/test của repo để hỗ trợ mã, giải thích đầu vào, quy tắc, đầu ra và giới hạn sửa tệp.
+- Prompt chính (tóm tắt nội dung trao đổi): Hỗ trợ hoàn thiện bốn module `label_format`, `second_opinion`, `autofix`, `gate` theo docstring và test của repo; giải thích từng phần để tôi tự kiểm tra. **Đầu vào:** nhãn YOLO `id cx cy w h`, kích thước ảnh, dự đoán model và cấu hình. **Quy tắc:** kiểm định dạng/hình học; đối chiếu model chỉ để cảnh báo; chỉ tự sửa ERROR được phép trên bản sao; quyết định gate theo số ảnh WARN chưa duyệt. **Đầu ra:** danh sách `Issue` có mã lỗi/số dòng, log thay đổi và quyết định Release/Hold/Rework đúng giao diện có sẵn. **Giới hạn:** lấy ngưỡng từ cấu hình, không sửa `data/`, `tests/` hay mã viết sẵn; không tự sửa WARN hoặc thay quy tắc gate để ép Release.
 - Cách kiểm: pytest 79 passed, hai sweep calib, xem raw, thí nghiệm budget=0; checker gốc Linux đầy đủ 0 lỗi/0 cảnh báo, mã 0; ba ca biên bổ sung đều qua.
 - AI hướng dẫn thiếu rõ ràng: các đoạn mã rời rạc chưa rõ vị trí trong hàm khiến tôi ghép ngoài run và giữ NotImplementedError; đã khắc phục bằng mã đầy đủ, sửa thụt dòng và chạy test.
