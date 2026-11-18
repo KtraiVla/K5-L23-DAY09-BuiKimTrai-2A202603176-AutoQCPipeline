@@ -1,4 +1,4 @@
-# Báo cáo Day 09 — Bùi Kim Trai, 2A202603176
+# Báo cáo Day 09 — Bùi Kim Trại, 2A202603176
 
 ## 1. Kết luận trước
 
@@ -72,6 +72,6 @@ Giả thuyết: (1) raw có 4 ảnh trùng test, có thể ảnh hưởng điể
 
 Giữ **Hold**. Release cần 0 ERROR và tối đa 20/205 ảnh cảnh báo chưa duyệt; không đổi ngân sách/trọng số/ngưỡng gate để ép đạt.
 
-- Prompt: AI hỗ trợ bốn module theo docstring/test, quy tắc, đầu ra và giới hạn sửa tệp.
-- Kiểm: pytest 79 passed, calib, xem raw, thí nghiệm budget=0; checker gốc Linux đầy đủ: 0 lỗi/0 cảnh báo, mã 0.
-- Vướng mắc AI: hướng dẫn từng đoạn chưa rõ vị trí hàm khiến tôi ghép ngoài run, giữ NotImplementedError; đã sửa bằng mã đầy đủ và kiểm thử.
+- Prompt chính (trích yêu cầu thực tế): “Bạn hãy hướng dẫn tôi làm thật chi tiết từ bước 2. Viết lần lượt 4 module.” AI đối chiếu docstring/test của repo để hỗ trợ mã, giải thích đầu vào, quy tắc, đầu ra và giới hạn sửa tệp.
+- Cách kiểm: pytest 79 passed, hai sweep calib, xem raw, thí nghiệm budget=0; checker gốc Linux đầy đủ 0 lỗi/0 cảnh báo, mã 0; ba ca biên bổ sung đều qua.
+- AI hướng dẫn thiếu rõ ràng: các đoạn mã rời rạc chưa rõ vị trí trong hàm khiến tôi ghép ngoài run và giữ NotImplementedError; đã khắc phục bằng mã đầy đủ, sửa thụt dòng và chạy test.
