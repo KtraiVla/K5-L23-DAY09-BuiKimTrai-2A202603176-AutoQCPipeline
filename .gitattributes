@@ -4,3 +4,5 @@
 *.png binary
 *.JPG binary
 *.pt binary
+# Preserve exact exported label bytes used by manifest label_sha1.
+submission/export/clean_v1/labels/*.txt -text whitespace=cr-at-eol
