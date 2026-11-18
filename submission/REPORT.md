@@ -59,12 +59,27 @@ Hai điểm mù có bằng chứng trên calib: (1) phash_dist=4 chỉ phát hi�
 
 ## 5. Train: raw vs clean
 
-**Chưa chạy.** Báo cáo hiện tại chỉ đánh giá phần lõi; chưa có số liệu train raw/clean. Tôi chưa kết luận clean cho mAP tốt hơn raw. Số ảnh còn cảnh báo giảm từ 60/205 xuống 38/205 sau đổi ngưỡng cũng không tự chứng minh chất lượng nhãn hoặc model được cải thiện.
+Đã chạy `yolo26n.pt` trên Colab T4: 20 epoch, batch 16, imgsz 640, seed 0 và 1 cho mỗi biến thể; cùng gold_val 40 ảnh và test 100 ảnh. Nguồn: [notebook đã chạy](https://colab.research.google.com/drive/1KDTjVgK1vrKhYAwK6_wNFliA0k2NaTpa).
+
+Bảng từ đầu ra `summarize_results.py` trong notebook:
+
+| biến thể | #ảnh train | số seed | map50 (TB ± độ lệch) | map50_95 (TB ± độ lệch) | precision (TB ± độ lệch) | recall (TB ± độ lệch) |
+|---|---|---|---|---|---|---|
+| raw | 224 | 2 | 0.726 ± 0.000 | 0.512 ± 0.004 | 0.764 ± 0.061 | 0.649 ± 0.028 |
+| clean | 205 | 2 | 0.700 ± 0.030 | 0.486 ± 0.013 | 0.715 ± 0.073 | 0.615 ± 0.017 |
+
+Lưu ý: 224 là số ảnh trong thư mục raw mà script ghi vào JSON/bảng; log Ultralytics xác nhận **chỉ dùng 213 ảnh train**, bỏ qua 11 ảnh/nhãn hỏng. Clean dùng đủ 205 ảnh, không có ảnh/nhãn hỏng bị bỏ qua.
+
+mAP50 theo seed của raw là 0.7256/0.7259; clean là 0.6788/0.7219. Chênh trung bình clean − raw = **−0.0254** (khoảng −2,54 điểm phần trăm), so với độ lệch chuẩn clean khoảng **0.0305** và raw khoảng **0.00021**; 0.000 trong bảng là số đã làm tròn. Clean thấp hơn ở cả hai seed, nhưng với hai seed và test 100 ảnh, chưa đủ cơ sở kết luận QC cải thiện hiệu năng hoặc suy rộng mức giảm này. Không khẳng định clean tốt hơn raw.
+
+Giả thuyết và cách kiểm: (1) raw có 4 ảnh bị checker phát hiện trùng test, nên điểm raw có thể bị ảnh hưởng bởi rò rỉ; chưa đo được mức thổi phồng. Cần một thí nghiệm riêng cùng seed, loại các ảnh trùng test khỏi train và đánh giá theo protocol cố định. (2) Clean còn 38/205 ảnh có cảnh báo chưa duyệt; AP50 trung bình lớp truck giảm từ khoảng 0.6485 xuống 0.5588. Cần đối chiếu các cảnh báo/sửa nhãn liên quan truck trên dữ liệu train, không chọn lại ngưỡng theo test. (3) Số ảnh thực dùng và phân bố lớp thay đổi sau QC; cần kiểm tra ảnh/lớp bị loại, thử đối chứng kiểm soát kích thước train và thêm seed.
+
+AP50 trung bình tăng nhẹ ở car (khoảng +0.0110) và person (+0.0053), còn truck giảm khoảng 0.0897 và bus giảm khoảng 0.0283; hai seed chưa đủ để coi đây là cải thiện chắc chắn theo lớp. Giữ quyết định **Hold**, tăng bằng chứng bằng thêm seed và dữ liệu đánh giá độc lập, chưa phát hành dataset như dữ liệu đã sạch hoàn toàn.
 
 ## 6. Quyết định và ghi chú AI
 
 Giữ quyết định **Hold**, chỉ dùng export như bản nháp thử nghiệm. Với 205 ảnh, điều kiện để Release là không còn ERROR và còn tối đa 20 ảnh có cảnh báo chưa duyệt (dưới 10%). Cần xác minh/xử lý đúng quy trình; không thay ngân sách 80 ảnh, trọng số hay ngưỡng gate để ép Release.
 
 - Prompt chính: nhờ AI hướng dẫn triển khai bốn module theo docstring/test của đề, giải thích cách kiểm và giới hạn sửa tệp.
-- Cách kiểm: chạy pytest (79 passed), hai sweep calibration, quan sát ảnh raw, đối chiếu báo cáo/hàng đợi và thí nghiệm budget=0.
+- Cách kiểm: chạy pytest (79 passed), hai sweep calibration, quan sát ảnh raw, đối chiếu báo cáo/hàng đợi và thí nghiệm budget=0. Kiểm tra đầy đủ bằng checker gốc trên Linux sau khi nhập kết quả train: 79 passed, 0 lỗi, 0 cảnh báo (mã thoát 0).
 - Vướng mắc với hướng dẫn AI: các đoạn mã minh họa rời rạc ban đầu chưa làm rõ vị trí đặt trong hàm, khiến tôi ghép code ngoài run và giữ NotImplementedError. Tôi khắc phục bằng mã đầy đủ, kiểm thụt dòng và chạy test.
