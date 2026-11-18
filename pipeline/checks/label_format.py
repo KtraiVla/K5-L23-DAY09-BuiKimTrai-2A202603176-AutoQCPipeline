@@ -25,16 +25,6 @@ from ..common import ERROR, WARN, Issue, iou_xywh, parse_yolo_line  # noqa: F401
 
 
 def run(ds, cfg):
-    # TODO: duyệt từng file nhãn, từng dòng
-    raise NotImplementedError("check label_format chưa làm")
-
-
-"""Kiểm tra định dạng dòng nhãn YOLO và hình học bounding box."""
-
-from ..common import ERROR, WARN, Issue, iou_xywh, parse_yolo_line
-
-
-def run(ds, cfg):
     settings = cfg["label_format"]
     issues = []
 
